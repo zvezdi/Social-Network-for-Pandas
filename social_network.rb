@@ -1,8 +1,28 @@
+require 'json'
+require_relative 'panda'
+require_relative 'savers_and_loaders'
+
 class PandaSocialNetwork
+  def self.load(filename, format)
+    load_class = format.new(self)
+    social_network = load_class.load(filename)
+
+    PandaSocialNetwork.new social_network
+  end
+
   attr_accessor :social_network
 
-  def initialize
-    @social_network = {}
+  def initialize(social_network = {})
+    @social_network = social_network
+  end
+
+  def save(file_name, format)
+    saver = format.new(self)
+    saver.save(file_name)
+  end
+
+  def to_json
+    social_network.to_json
   end
 
   def add_panda(panda)
@@ -99,14 +119,13 @@ class PandaSocialNetwork
 
     -1
   end
-   
-  def number_of_gender_friends(panda, gender)
-    friends_of(panda).map do |friend|
-      if friend.gender == gender
-        friend = 1
-      else
-        friend = 0
-      end
-    end.reduce(0, :+)
-  end
 end
+
+
+net = PandaSocialNetwork.new
+ani = Panda.new "Ani", "ani@panda.net", "male"
+net.add_panda ani
+net.save("data/database", JsonSerializer)
+
+second = PandaSocialNetwork.load("data/database", JsonSerializer)
+second.save("data/checkload", JsonSerializer)
